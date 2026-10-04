@@ -1,0 +1,437 @@
+{
+    "type": "Group",
+    "id": "group_7d351031-d76a-2778-6c4d-0b8f9cf907db",
+    "elements": [
+        {
+            "type": "Group",
+            "id": "group_94485b98-40ed-962e-2b7d-85850f1ffb6d",
+            "options": {
+                "orientation": "row"
+            },
+            "elements": [
+                {
+                    "type": "Control",
+                    "variant": "select",
+                    "scope": "#/properties/app_type",
+                    "label": "APP TYPE",
+                    "options": {
+                        "elements": [
+                            {
+                                "label": "JBOSS",
+                                "value": "jboss"
+                            },
+                            {
+                                "label": "Weblogic",
+                                "value": "weblogic"
+                            },
+                            {
+                                "label": "RHEL",
+                                "value": "rhel"
+                            },
+                            {
+                                "label": "Nginix",
+                                "value": "nginix"
+                            }
+                        ],
+                        "placeholder": "jboss",
+                        "required": true
+                    },
+                    "id": "control_2153f55b-f8c0-7e9e-f38a-efd150cdd69d"
+                },
+                {
+                    "type": "Control",
+                    "variant": "select",
+                    "scope": "#/properties/env",
+                    "label": "Environment",
+                    "options": {
+                        "elements": [
+                            {
+                                "label": "Production",
+                                "value": "prod"
+                            },
+                            {
+                                "label": "Development",
+                                "value": "dev"
+                            },
+                            {
+                                "label": "Demo",
+                                "value": "demo"
+                            }
+                        ],
+                        "placeholder": "Production",
+                        "helpText": "",
+                        "required": true
+                    },
+                    "id": "control_7c704b89-b0ce-74df-41d9-83264e90d61c"
+                },
+                {
+                    "type": "Control",
+                    "variant": "select",
+                    "scope": "#/properties/site",
+                    "label": "Site",
+                    "options": {
+                        "elements": [
+                            {
+                                "label": "Chennai",
+                                "value": "chennai"
+                            },
+                            {
+                                "label": "Mumbai",
+                                "value": "mumbai"
+                            }
+                        ],
+                        "placeholder": "Chennai",
+                        "required": true
+                    },
+                    "id": "control_97b18a1f-e129-a9e8-cea2-0282748c273c"
+                }
+            ],
+            "label": "APP Details"
+        },
+        {
+            "type": "Divider",
+            "scope": "#",
+            "id": "divider_e7d043ce-50f9-f777-c13c-06fe463875d3"
+        },
+        {
+            "type": "Group",
+            "id": "group_9a84f9fa-034e-a533-3442-ed4adbe3a3fd",
+            "options": {
+                "orientation": "row"
+            },
+            "elements": [
+                {
+                    "type": "Control",
+                    "variant": "select",
+                    "scope": "#/properties/tshirt",
+                    "label": "T Shirt",
+                    "options": {
+                        "elements": [
+                            {
+                                "label": "XS",
+                                "value": "xs"
+                            },
+                            {
+                                "label": "Small",
+                                "value": "small"
+                            },
+                            {
+                                "label": "Medium",
+                                "value": "medium"
+                            },
+                            {
+                                "label": "Large",
+                                "value": "large"
+                            },
+                            {
+                                "label": "XL",
+                                "value": "xl"
+                            }
+                        ],
+                        "placeholder": ""
+                    },
+                    "id": "control_ac08fa7d-664b-25b7-298a-901e5161adf9",
+                    "events": {
+                        "onChange": [
+                            {
+                                "type": "SET_VARIABLE",
+                                "condition": {
+                                    "type": "SCHEMA",
+                                    "scope": "$properties.tshirt",
+                                    "schema": {
+                                        "const": "xs"
+                                    }
+                                },
+                                "result": {
+                                    "$properties.vcpu": "2",
+                                    "$properties.ram": "4"
+                                }
+                            },
+                            {
+                                "type": "SET_VARIABLE",
+                                "condition": {
+                                    "type": "SCHEMA",
+                                    "scope": "$properties.tshirt",
+                                    "schema": {
+                                        "const": "small"
+                                    }
+                                },
+                                "result": {
+                                    "$properties.vcpu": "2",
+                                    "$properties.ram": "8"
+                                }
+                            },
+                            {
+                                "type": "SET_VARIABLE",
+                                "condition": {
+                                    "type": "SCHEMA",
+                                    "scope": "$properties.tshirt",
+                                    "schema": {
+                                        "const": "medium"
+                                    }
+                                },
+                                "result": {
+                                    "$properties.vcpu": "2",
+                                    "$properties.ram": "16"
+                                }
+                            },
+                            {
+                                "type": "SET_VARIABLE",
+                                "condition": {
+                                    "type": "SCHEMA",
+                                    "scope": "$properties.tshirt",
+                                    "schema": {
+                                        "const": "large"
+                                    }
+                                },
+                                "result": {
+                                    "$properties.vcpu": "4",
+                                    "$properties.ram": "32"
+                                }
+                            },
+                            {
+                                "type": "SET_VARIABLE",
+                                "condition": {
+                                    "type": "SCHEMA",
+                                    "scope": "$properties.tshirt",
+                                    "schema": {
+                                        "const": "xl"
+                                    }
+                                },
+                                "result": {
+                                    "$properties.vcpu": "8",
+                                    "$properties.ram": "64"
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "type": "Control",
+                    "variant": "number",
+                    "label": "vcpu",
+                    "options": {
+                        "min": 0,
+                        "step": 1,
+                        "secret": false
+                    },
+                    "id": "control_6e8cf43b-ed91-71d1-d66e-87135273b66b",
+                    "scope": "#/properties/vcpu",
+                    "placeholder": "",
+                    "rule": [
+                        {
+                            "effect": "DISABLE",
+                            "condition": {
+                                "type": "SCHEMA",
+                                "scope": "$properties.tshirt",
+                                "schema": {
+                                    "type": [
+                                        "string",
+                                        "number",
+                                        "integer",
+                                        "boolean"
+                                    ],
+                                    "pattern": "\\s*"
+                                }
+                            }
+                        },
+                        {
+                            "effect": "DISABLE",
+                            "condition": {
+                                "type": "SCHEMA",
+                                "scope": "$properties.tshirt",
+                                "schema": {
+                                    "maxLength": 0
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "Control",
+                    "variant": "number",
+                    "label": "RAM (GiB)",
+                    "options": {
+                        "min": 0,
+                        "step": 1,
+                        "validate": false,
+                        "secret": false
+                    },
+                    "id": "control_dba5aa86-f387-a543-ef5b-6f99b3bd4831",
+                    "scope": "#/properties/ram",
+                    "validation": {
+                        "pattern": "^[\\d]*$"
+                    },
+                    "placeholder": "",
+                    "rule": [
+                        {
+                            "effect": "DISABLE",
+                            "condition": {
+                                "type": "SCHEMA",
+                                "scope": "$properties.tshirt",
+                                "schema": {
+                                    "type": [
+                                        "string",
+                                        "number",
+                                        "integer",
+                                        "boolean"
+                                    ],
+                                    "pattern": "\\s*"
+                                }
+                            }
+                        },
+                        {
+                            "effect": "DISABLE",
+                            "condition": {
+                                "type": "SCHEMA",
+                                "scope": "$properties.tshirt",
+                                "schema": {
+                                    "maxLength": 0
+                                }
+                            }
+                        }
+                    ]
+                }
+            ],
+            "label": "VM Details"
+        },
+        {
+            "type": "Group",
+            "id": "group_group_acbe6d66-febf-654c-70c0-79d2102393da",
+            "elements": [
+                {
+                    "type": "Group",
+                    "id": "group_1fff06a6-45aa-472d-a059-586ef9db3e52",
+                    "options": {
+                        "orientation": "row"
+                    },
+                    "elements": [
+                        {
+                            "type": "Control",
+                            "variant": "radio",
+                            "label": "OS",
+                            "elements": [
+                                {
+                                    "label": "RHEL",
+                                    "value": "rhel"
+                                },
+                                {
+                                    "label": "CENTOS",
+                                    "value": "centos"
+                                },
+                                {
+                                    "label": "Windows",
+                                    "value": "win"
+                                }
+                            ],
+                            "id": "control_1524d69b-ea4e-ffdb-80ed-d68c4f62a6db",
+                            "scope": "#/properties/os"
+                        },
+                        {
+                            "type": "Group",
+                            "id": "group_group_888fdb17-102c-8c73-d08e-1398f523ea42",
+                            "elements": [
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/rhel_version",
+                                    "id": "control_a27a45bb-335a-9104-4e9b-88479986e534",
+                                    "rule": {
+                                        "effect": "SHOW",
+                                        "condition": {
+                                            "type": "COMPOUND",
+                                            "operator": "OR",
+                                            "conditions": [
+                                                {
+                                                    "type": "SCHEMA",
+                                                    "scope": "$properties.os",
+                                                    "schema": {
+                                                        "const": "rhel"
+                                                    }
+                                                },
+                                                {
+                                                    "type": "SCHEMA",
+                                                    "scope": "$properties.os",
+                                                    "schema": {
+                                                        "const": "centos"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "label": "Linux Version"
+                                },
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/win_version",
+                                    "id": "control_c53baf1c-3670-0e04-4342-03422a224e4a",
+                                    "rule": {
+                                        "effect": "SHOW",
+                                        "condition": {
+                                            "type": "SCHEMA",
+                                            "scope": "$properties.os",
+                                            "schema": {
+                                                "const": "win"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Group",
+            "id": "group_5486eeee-b083-df1b-d605-165a7b1cff39",
+            "options": {
+                "orientation": "row"
+            },
+            "elements": [
+                {
+                    "type": "Control",
+                    "scope": "#/properties/selection",
+                    "id": "control_c0dfcc69-1119-ff3d-52e5-3def08f944ae"
+                }
+            ],
+            "label": "Infrastructure"
+        },
+        {
+            "type": "Group",
+            "id": "group_f69c16b3-df35-ebca-7834-461124b7bd92",
+            "options": {
+                "orientation": "row"
+            },
+            "elements": [
+                {
+                    "type": "Control",
+                    "scope": "#/properties/pc",
+                    "id": "control_492b15e0-8442-87da-825d-45eb5011af82",
+                    "label": "PC"
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/cluster",
+                    "id": "control_91c5fff6-9ed0-f8c1-3339-bd583614a39a",
+                    "label": "Cluster"
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/Subnet",
+                    "id": "control_4245bafb-33c9-ef99-a8af-e8b85d147305",
+                    "label": "Subnet"
+                }
+            ],
+            "rule": {
+                "effect": "SHOW",
+                "condition": {
+                    "type": "SCHEMA",
+                    "scope": "$properties.selection",
+                    "schema": {
+                        "const": "Manual"
+                    }
+                }
+            }
+        }
+    ]
+}
