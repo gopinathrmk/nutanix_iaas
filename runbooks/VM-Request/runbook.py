@@ -28,8 +28,8 @@ except Exception as e:
 
 BP_CRED_API_CRED = dynamic_cred(
     "@@{username}@@",
-    Ref.Account(env_data["cred_provider"]),
-    resource_type=Ref.Resource_Type(env_data["cred_provider"]),
+    Ref.Account(env_data["NCM"]["cred_provider"]),
+    resource_type=Ref.Resource_Type(env_data["NCM"]["cred_provider"]),
     variable_dict={
         "type": "api",
     },
@@ -42,13 +42,13 @@ BP_CRED_API_CRED = dynamic_cred(
 
 # Runbook
 @runbook
-def VMRequest(credentials=[BP_CRED_API_CRED]):
+def VM_Request(credentials=[BP_CRED_API_CRED]):
 
     bp_name = CalmVariable.Simple(
-        env_data.get("bp1_name", ""), label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
+        env_data["NCM"]["bp1_name"], label="", is_mandatory=False, is_hidden=False, runtime=False, description=""
     )  
     NC_FQDN = CalmVariable.Simple(
-        env_data.get("nc_fqdn", ""), label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
+        env_data["NCM"]["fqdn"], label="", is_mandatory=False, is_hidden=False, runtime=False, description=""
     )  
     selection = CalmVariable.WithOptions(
         ["Automatic", "Manual"],
@@ -63,7 +63,7 @@ def VMRequest(credentials=[BP_CRED_API_CRED]):
         CalmVarTask.Exec.escript.py3(
             name="",
             filename=os.path.join(
-                "scripts", "_Runbook_VMRequest_variable_Subnet_Task_SampleTask.py"
+                "scripts", "subnet_dropdown.py"
             ),
         ),
         label="",
@@ -75,7 +75,7 @@ def VMRequest(credentials=[BP_CRED_API_CRED]):
         CalmVarTask.Exec.escript.py3(
             name="",
             filename=os.path.join(
-                "scripts", "_Runbook_VMRequest_variable_cluster_Task_SampleTask.py"
+                "scripts", "cluster_dropdown.py"
             ),
         ),
         label="",
@@ -173,7 +173,7 @@ def VMRequest(credentials=[BP_CRED_API_CRED]):
         CalmVarTask.Exec.escript.py3(
             name="",
             filename=os.path.join(
-                "scripts", "_Runbook_VMRequest_variable_pc_Task_SampleTask.py"
+                "scripts", "pc_dropdown.py"
             ),
         ),
         label="",
@@ -184,7 +184,7 @@ def VMRequest(credentials=[BP_CRED_API_CRED]):
 
     CalmTask.Exec.escript.py3(
         name="Input Validation",
-        filename=os.path.join("scripts", "_Runbook_VMRequest_Task_InputValidation.py"),
+        filename=os.path.join("scripts", "input_validation.py"),
     )
     CalmTask.Exec.escript.py3(
         name="Launch Blueprint",
@@ -192,4 +192,4 @@ def VMRequest(credentials=[BP_CRED_API_CRED]):
     )
 
 class RunbookMetadata(Metadata):
-    project = Ref.Project(env_data["nc_project"])
+    project = Ref.Project(env_data["NCM"]["project"])

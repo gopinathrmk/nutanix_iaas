@@ -27,8 +27,8 @@ except Exception as e:
 
 BP_CRED_API_CRED = dynamic_cred(
     "@@{username}@@",
-    Ref.Account(env_data["cred_provider"]),
-    resource_type=Ref.Resource_Type(env_data["cred_provider"]),
+    Ref.Account(env_data["NCM"]["cred_provider"]),
+    resource_type=Ref.Resource_Type(env_data["NCM"]["cred_provider"]),
     variable_dict={
         "type": "api",
     },
@@ -50,10 +50,13 @@ class vmcalm_timeResources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk.Disk.Scsi.cloneFromImageService(env_data["pc1_image"], bootable=True)
+        AhvVmDisk.Disk.Scsi.cloneFromImageService(env_data["PC1"]["default_image"], bootable=True)
     ]
-    nics = [AhvVmNic.NormalNic.ingress(env_data["pc1_cluster1_subnet"], cluster=env_data["pc1_cluster1"])]
+    nics = [AhvVmNic.NormalNic.ingress(env_data["PC1"]["default_subnet"], cluster=env_data["PC1"]["default_cluster"])]
 
+    guest_customization = AhvVmGC.CloudInit(
+        filename=os.path.join("specs", "vmcalm_time_cloud_init_data.yaml")
+    )
     power_state = "ON"
     boot_type = "LEGACY"
 
@@ -62,12 +65,12 @@ class vmcalm_time(AhvVm):
 
     name = "vm-@@{calm_time}@@"
     resources = vmcalm_timeResources
-    cluster = Ref.Cluster(name=env_data["pc1_cluster1"])
+    cluster = Ref.Cluster(name=env_data["PC1"]["default_cluster"])
 
 
 class VM1(Substrate):
 
-    account = Ref.Account(env_data["ncm_account1"])
+    account = Ref.Account(env_data["NCM"]["account1"])
     os_type = "Linux"
     provider_type = "AHV_VM"
     provider_spec = vmcalm_time
@@ -104,10 +107,6 @@ class Default(Profile):
 
     deployments = [deployment_c95b2376]
 
-    json = CalmVariable.Simple(
-        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
-    )
-
     site = CalmVariable.Simple(
         "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
     )
@@ -133,4 +132,4 @@ class chn_bp(Blueprint):
 class BpMetadata(Metadata):
 
     categories = {"TemplateType": "Vm"}
-    project = Ref.Project(env_data["nc_project"])
+    project = Ref.Project(env_data["NCM"]["project"])
