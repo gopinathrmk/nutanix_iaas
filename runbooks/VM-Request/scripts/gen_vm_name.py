@@ -1,7 +1,7 @@
 import requests
 requests.packages.urllib3.disable_warnings()
 
-from time import sleep
+#from time import sleep
 # Global configuration
 VERSION = "4.2"
 BACKOFF_FACTOR = 2
@@ -84,42 +84,18 @@ def list_vms(params=None, exit_on_error=True):
 
 # ================= PC Details =================
 PC_IP = "@@{PC_IP}@@"
-PC_USER = "@@{PC_CRED.username}@@"
-PC_PASSWORD = "@@{PC_CRED.secret}@@"
+PC_USER = "@@{API_CRED.username}@@"
+PC_PASSWORD = "@@{API_CRED.secret}@@"
 
 
-app_type = '@@{app_type}@@'
-env = '@@{env_type}@@'
-site = '@@{site}@@'
-
-
-# Hard coded values for testing
-PC_IP = "pct.blrgso.lab"
-PC_USER = "gs"
-PC_PASSWORD = "Nutanix@123"
-
-app_type = "JBOSS"
-env = "Production"
-site = "Chennai"
-# End of Hard coded values
-
-env_lookup = {
-    "Production" : "prod",
-    "Development" : "dev",
-    "Demo" : "demo"
-}
-
-site_lookup = {
-    "Chennai" : "CHN",
-    "Mumbai" : "MUM"
-}
+app_type = "@@{app_type}@@"
+env = "@@{env}@@"
+site = "@@{site}@@"
 
 
 def main():
-
-    vm_name = site_lookup.get(site) + "-" + \
-                env_lookup.get(env) + "-" + \
-                app_type
+    
+    vm_name = site + "-" + env + "-" + app_type
     vm_name = vm_name.lower()
     # print(vm_name)
 

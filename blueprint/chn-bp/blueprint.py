@@ -77,7 +77,7 @@ class vmcalm_timeResources(AhvVmResources):
 
 class vmcalm_time(AhvVm):
 
-    name = "vm-@@{calm_time}@@"
+    name = "@@{calm_application_name}@@"
     resources = vmcalm_timeResources
     cluster = Ref.Cluster(name=PC["default_cluster"])
 
@@ -120,18 +120,6 @@ class deployment_c95b2376(Deployment):
 class Default(Profile):
 
     deployments = [deployment_c95b2376]
-
-    site = CalmVariable.Simple(
-        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
-    )
-
-    app_type = CalmVariable.Simple(
-        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
-    )
-
-    env = CalmVariable.Simple(
-        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
-    )
 
 
 class chn_bp(Blueprint):

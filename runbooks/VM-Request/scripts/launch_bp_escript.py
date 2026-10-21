@@ -1,21 +1,16 @@
+from pprint import pprint
 import requests
-requests.packages.urllib3.disable_warnings()
+
+BACKOFF_FACTOR = 2
+
+DEFAULT_TIMEOUT = 10
+
+RETRIES = 3
+
+SESSION = None
 
 # Global configuration
 VERSION = "4.2"
-RETRIES = 3
-BACKOFF_FACTOR = 2
-DEFAULT_TIMEOUT = 10
-API_SERVER = None
-BASE_URL = None
-SESSION = None
-
-# ================= NC Details =================
-NC_API_URL = "ncm.services."+"@@{NC_FQDN}@@"
-NC_USER = "@@{API_CRED.username}@@"
-NC_PASSWORD = "@@{API_CRED.secret}@@"
-bp_name = "@@{bp_name}@@"
-app_name = "test-app-200"
 
 def init_client(api_server, username, password, retries=RETRIES, backoff_factor=BACKOFF_FACTOR, default_timeout=DEFAULT_TIMEOUT, version=VERSION):
     global API_SERVER, BASE_URL, RETRIES, BACKOFF_FACTOR, SESSION, VERSION, DEFAULT_TIMEOUT
@@ -32,6 +27,29 @@ def init_client(api_server, username, password, retries=RETRIES, backoff_factor=
     SESSION.auth = (username, password)
     SESSION.headers.update({"Content-Type": "application/json"})
     SESSION.verify = False
+
+def gen_payload_for_launch(bp_ext_id, runtime_editables_response,app_name,profile="Default"):
+    app_profile_ref = {}
+    for resource in runtime_editables_response.get("resources", []):
+        if resource.get("app_profile_reference", {}).get("name") == profile:
+            app_profile_ref = resource.get("app_profile_reference", {})
+            runtime_editables = resource.get("runtime_editables", {})
+            break
+
+    if app_profile_ref == {}:
+        print(f"No app profile found with name '{profile}' in the runtime editables response.")
+        return None
+    
+    payload = {
+        "spec": {
+            "app_name": app_name,
+            "app_profile_reference": app_profile_ref,
+            "runtime_editables": runtime_editables
+        }
+    }
+    return payload
+
+BASE_URL = None
 
 def process_request(method, endpoint, exit_on_error=True, full_response=False, **kwargs):
     if SESSION is None:
@@ -81,31 +99,6 @@ def process_request(method, endpoint, exit_on_error=True, full_response=False, *
         exit(1)
     return error
 
-
-# Retry status code 
-# 429 — Too Many Requests
-# 408 — Request Timeout
-
-# These usually indicate temporary backend problems:
-# 500 — Internal Server Error
-# 502 — Bad Gateway
-# 503 — Service Unavailable
-# 504 — Gateway Timeout
-
-
-def list_blueprints(payload={"kind": "blueprint"}):
-    endpoint = "/nutanix/v3/blueprints/list"
-    response = process_request("POST", endpoint, json=payload, exit_on_error=False)
-    # print(f"list_blueprints response: {response}")  # Debugging line
-    bps = response.get("data", {}) if response["success"] else []
-    return bps
-
-def get_blueprint_by_id(bp_ext_id):
-    endpoint = f"/nutanix/v3/blueprints/{bp_ext_id}"
-    response = process_request("GET", endpoint, exit_on_error=False)
-    bp = response.get("data", {}) if response["success"] else {}
-    return bp
-
 def get_blueprint_id_by_name(bp_name):
     endpoint = f"/nutanix/v3/blueprints/list"
     payload={"kind": "blueprint","filter": f"name=={bp_name}"}
@@ -115,83 +108,15 @@ def get_blueprint_id_by_name(bp_name):
     bp_ext_id = bp.get("entities", [{}])[0].get("status", {}).get("uuid") if bp.get("entities") else None
     return bp_ext_id
 
-def update_blueprint(bp_ext_id, payload):
-    endpoint = f"/nutanix/v3/blueprints/{bp_ext_id}"
-    response = process_request("PUT", endpoint, json=payload, exit_on_error=False)
-    bp = response.get("data", {}) if response["success"] else {}
-    return bp
-
 def get_runtime_editables(bp_ext_id):
     endpoint = f"/nutanix/v3/blueprints/{bp_ext_id}/runtime_editables"
     response = process_request("GET", endpoint, exit_on_error=False)
     runtime_editables_response = response.get("data", {}) if response["success"] else {}
     return runtime_editables_response
 
-def monitor_bp_launch_status(bp_ext_id, request_id, max_retries=10):
-    if bp_ext_id is None or request_id is None:
-        print("Blueprint ID or Request ID is None. Cannot monitor launch status.")
-        return {"status": {"state": "failed"}}
-    
-    endpoint = f"/nutanix/v3/blueprints/{bp_ext_id}/pending_launches/{request_id}"
-    for retry in range(max_retries + 1):
-        response = process_request("GET", endpoint, exit_on_error=False)
-        launch_status = response.get("data", {}) if response["success"] else {}
-        status = launch_status.get("status", {}).get("state")
-        #pprint(f"Launch status: {status}, Launch details: {launch_status}") # Debugging line
-        print(f"Launch status: {status}")
-
-        if status not in ["running", "IN_PROGRESS"]:
-            print(f"Final launch status: {status}")
-            return launch_status
-
-        if retry < max_retries:
-            print("Launch is still in progress. Waiting for 10 seconds before checking again...")
-            sleep(10)
-
-    print(f"Maximum retries ({max_retries}) reached. Final launch status: {status}")
-    return launch_status
-
-
-def monitor_app_status(app_uuid, max_retries=10):
-    endpoint = f"/nutanix/v3/apps/{app_uuid}"
-    for retry in range(max_retries + 1):
-        response = process_request("GET", endpoint, exit_on_error=False)
-        app_status = response.get("data", {}).get("status", {}).get("state") if response["success"] else None
-        print(f"Application status: {app_status}")
-
-        if app_status not in ["provisioning", "IN_PROGRESS"]:
-            print(f"Final application status: {app_status}")
-            return app_status
-
-        if retry < max_retries:
-            print("Application is still in progress. Waiting for 30 seconds before checking again...")
-            sleep(30)
-
-    print(f"Maximum retries ({max_retries}) reached. Final application status: {app_status}")
-    return app_status
-
-def gen_payload_for_launch(bp_ext_id, runtime_editables_response,app_name,profile="Default"):
-    app_profile_ref = {}
-    for resource in runtime_editables_response.get("resources", []):
-        if resource.get("app_profile_reference", {}).get("name") == profile:
-            app_profile_ref = resource.get("app_profile_reference", {})
-            runtime_editables = resource.get("runtime_editables", {})
-            break
-
-    if app_profile_ref == {}:
-        print(f"No app profile found with name '{profile}' in the runtime editables response.")
-        return None
-    
-    payload = {
-        "spec": {
-            "app_name": app_name,
-            "app_profile_reference": app_profile_ref,
-            "runtime_editables": runtime_editables
-        }
-    }
-    return payload
-
-
+#scope for improvement : 
+# Add specific substrate name for multi-vm bluepint. 
+# Add json in the app variable list 
 def modify_payload_for_launch(payload, app_name=None, vm_name=None, num_sockets=None, num_vcpus_per_socket=None,
                                memory_size_mib=None, cluster_reference=None, subnet_reference=None, 
                                image_reference=None, disk_size_mib=None, app_variable=None):
@@ -229,7 +154,47 @@ def modify_payload_for_launch(payload, app_name=None, vm_name=None, num_sockets=
             if var_name in app_variable.keys():
                 variable["value"]["value"] = app_variable.get(var_name)
 
-                
+def monitor_app_status(app_uuid, max_retries=10):
+    endpoint = f"/nutanix/v3/apps/{app_uuid}"
+    for retry in range(max_retries + 1):
+        response = process_request("GET", endpoint, exit_on_error=False)
+        app_status = response.get("data", {}).get("status", {}).get("state") if response["success"] else None
+        print(f"Application status: {app_status}")
+
+        if app_status not in ["provisioning", "IN_PROGRESS"]:
+            print(f"Final application status: {app_status}")
+            return app_status
+
+        if retry < max_retries:
+            print("Application is still in progress. Waiting for 30 seconds before checking again...")
+            sleep(30)
+
+    print(f"Maximum retries ({max_retries}) reached. Final application status: {app_status}")
+    return app_status
+
+def monitor_bp_launch_status(bp_ext_id, request_id, max_retries=10):
+    if bp_ext_id is None or request_id is None:
+        print("Blueprint ID or Request ID is None. Cannot monitor launch status.")
+        return {"status": {"state": "failed"}}
+    
+    endpoint = f"/nutanix/v3/blueprints/{bp_ext_id}/pending_launches/{request_id}"
+    for retry in range(max_retries + 1):
+        response = process_request("GET", endpoint, exit_on_error=False)
+        launch_status = response.get("data", {}) if response["success"] else {}
+        status = launch_status.get("status", {}).get("state")
+        #pprint(f"Launch status: {status}, Launch details: {launch_status}") # Debugging line
+        print(f"Launch status: {status}")
+
+        if status not in ["running", "IN_PROGRESS"]:
+            print(f"Final launch status: {status}")
+            return launch_status
+
+        if retry < max_retries:
+            print("Launch is still in progress. Waiting for 10 seconds before checking again...")
+            sleep(10)
+
+    print(f"Maximum retries ({max_retries}) reached. Final launch status: {status}")
+    return launch_status
 
 def simple_launch_blueprint(bp_ext_id, payload):
     endpoint = f"/nutanix/v3/blueprints/{bp_ext_id}/simple_launch"
@@ -240,7 +205,7 @@ def simple_launch_blueprint(bp_ext_id, payload):
     if not request_id:
         print("Failed to retrieve request_id from the launch response.")
         print(f"Blueprint launch failed.")
-        #pprint(response)  # Debugging line
+        pprint(response)  # Debugging line
         return None, "failed"
 
     launch_status=monitor_bp_launch_status(bp_ext_id,request_id)  # Call to get the launch status
@@ -249,12 +214,33 @@ def simple_launch_blueprint(bp_ext_id, payload):
     print(f"Launch status: {status}, Application UUID: {app_uuid}")
     return app_uuid, status
 
+# ================= NC Details =================
+NC_API_URL = "ncm.services."+"@@{NC_FQDN}@@"
+NC_USER = "@@{NC_CRED.username}@@"
+NC_PASSWORD = "@@{NC_CRED.secret}@@"
+bp_name = "@@{bp_name}@@"
+vm_name = "@@{vm_name}@@"
 
-def get_app(app_uuid):
-    endpoint = f"/nutanix/v3/apps/{app_uuid}"
-    response = process_request("GET", endpoint, exit_on_error=False)
-    app = response.get("data", {}) if response["success"] else {}
-    return app
+try:
+    cluster_reference = json.loads('@@{selected_cluster_reference}@@')
+    subnet_reference = json.loads('@@{selected_subnet_reference}@@')
+    image_reference = json.loads('@@{selected_image_reference}@@')
+except json.decoder.JSONDecodeError:
+    print("!!! Fatal: no cluster or subnet reference")
+    exit(1)
+
+
+
+#bps = list_blueprints()
+#print(bps)
+
+## Step 1: Get the blueprint ID by name
+## Step 2: Get the runtime editables for the blueprint
+## Step 3: Generate the payload for launch using the runtime editables
+## Step 4: Modify the payload for launch with specific parameters
+## Step 5: Launch the blueprint and monitor the launch status
+## Step 6: Monitor the application status after launch
+
 
 def main():
     init_client(api_server=NC_API_URL, username=NC_USER, password=NC_PASSWORD)
@@ -265,36 +251,16 @@ def main():
     runtime_editables_response = get_runtime_editables(bp_ext_id)
     #pprint(runtime_editables_response)
 
-    payload_for_launch = gen_payload_for_launch(bp_ext_id, runtime_editables_response, app_name=app_name)
-    #pprint(payload_for_launch)
+    payload_for_launch = gen_payload_for_launch(bp_ext_id, runtime_editables_response, app_name=vm_name)
+    pprint(payload_for_launch)
 
-    subnet_reference = {
-        "kind": "subnet",
-        "name": "",
-        "uuid": "e0b08efb-7c6f-4eac-b299-c39e2ec2a0a6"
-    }
 
-    image_reference = {
-        "kind": "image",
-        "name": "Rocky-10-GenericCloud-Base.latest.aarch64.qcow2",
-        "uuid": "282844c6-4e99-41fd-9c1f-b2c3911d0072"
-    }
-
-    cluster_reference = {
-        "kind": "cluster",
-        "name": "Trigonometry",
-        "uuid": "00065b0b-ad7b-1625-6270-3cecef8266c5"
-    }
-    vm_name = "test-vm-100"
-
-    app_variable = {"site": "blr", "env": "dev", "app_type": "jboss", "json": {"key1": "value1", "key2": "value2"}}
-
-    modify_payload_for_launch(payload_for_launch,app_name=vm_name, vm_name=vm_name, num_sockets=2, num_vcpus_per_socket=2,
+    modify_payload_for_launch(payload_for_launch,app_name=vm_name, num_sockets=2, num_vcpus_per_socket=2,
                         memory_size_mib=2048, cluster_reference=cluster_reference, subnet_reference=subnet_reference,
                         image_reference=image_reference, disk_size_mib=51200)
 
     print("Modified payload for launch:")
-    #pprint(payload_for_launch)
+    pprint(payload_for_launch)
 
     app_uuid, status = simple_launch_blueprint(bp_ext_id, payload_for_launch)
 
@@ -305,6 +271,5 @@ def main():
             print(f"Application is running successfully. Application UUID: {app_uuid}")
     else:
         print(f"Blueprint launch failed. Status: {status}")
-
 
 main()

@@ -56,29 +56,70 @@ def VM_Request(credentials=[BP_CRED_API_CRED]):
     #global_variables = [Ref.GlobalVariable("PC_details")]
     #global_variables = [Ref.GlobalVariable("NC_FQDN")]
 
+    # App Details 
+    app_type = CalmVariable.Simple(
+        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
+    )  
+    env = CalmVariable.Simple(
+        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
+    )  
+    site = CalmVariable.Simple(
+        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
+    )  
 
-    selection = CalmVariable.WithOptions(
-        ["Automatic", "Manual"],
-        label="Selection",
-        default="Automatic",
+    # VM Details
+    tshirt = CalmVariable.Simple(
+        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
+    )  
+    vcpu = CalmVariable.Simple.int(
+        "",
+        label="",
+        regex="^[\\d]*$",
+        validate_regex=False,
         is_mandatory=False,
         is_hidden=False,
         runtime=True,
         description="",
-    )  # noqa
-    Subnet = CalmVariable.WithOptions.FromTask(
+    )  
+    ram = CalmVariable.Simple.int(
+        "",
+        label="",
+        regex="^[\\d]*$",
+        validate_regex=False,
+        is_mandatory=False,
+        is_hidden=False,
+        runtime=True,
+        description="",
+    )  
+    os_name = CalmVariable.Simple(
+        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
+    )  
+
+    lin_version = CalmVariable.Simple(
+        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
+    )  
+
+    win_version = CalmVariable.Simple(
+        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
+    )  
+
+    # Infra Details
+    infra_selection = CalmVariable.Simple(
+        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
+    )  
+    pc_name = CalmVariable.WithOptions.FromTask(
         CalmVarTask.Exec.escript.py3(
             name="",
             filename=os.path.join(
-                "scripts", "subnet_dropdown.py"
+                "scripts", "pc_dropdown.py"
             ),
         ),
         label="",
         is_mandatory=False,
         is_hidden=False,
         description="",
-    )  # noqa
-    cluster = CalmVariable.WithOptions.FromTask(
+    )  
+    cluster_name = CalmVariable.WithOptions.FromTask(
         CalmVarTask.Exec.escript.py3(
             name="",
             filename=os.path.join(
@@ -91,103 +132,25 @@ def VM_Request(credentials=[BP_CRED_API_CRED]):
         description="",
         regex="^.*$",
         validate_regex=False,
-    )  # noqa
-    app_type_test = CalmVariable.WithOptions(
-        ["JBOSS", "Nginix", "Weblogic"],
-        label="APP TYPE",
-        default="JBOSS",
-        regex="^.*$",
-        validate_regex=False,
-        is_mandatory=True,
-        is_hidden=False,
-        runtime=True,
-        description="",
-    )  # noqa
-    win_version = CalmVariable.WithOptions(
-        ["2022", "2025"],
-        label="Windows OS Version",
-        default="2022",
-        is_mandatory=False,
-        is_hidden=False,
-        runtime=True,
-        description="",
-    )  # noqa
-    centos_version = CalmVariable.WithOptions(
-        ["9.8", "9.7"],
-        label="Centos Version",
-        default="9.8",
-        is_mandatory=False,
-        is_hidden=False,
-        runtime=True,
-        description="",
-    )  # noqa
-    rhel_version = CalmVariable.WithOptions(
-        ["9.8", "9.7"],
-        label="RHEL Version",
-        default="9.8",
-        regex="^.*$",
-        validate_regex=False,
-        is_mandatory=False,
-        is_hidden=False,
-        runtime=True,
-        description="",
-    )  # noqa
-    os_version = CalmVariable.WithOptions(
-        ["9.8", "9.7", "2015"],
-        label="",
-        default="9.8",
-        is_mandatory=False,
-        is_hidden=False,
-        runtime=True,
-        description="",
-    )  # noqa
-    app_type = CalmVariable.Simple(
-        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
-    )  # noqa
-    env = CalmVariable.Simple(
-        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
-    )  # noqa
-    site = CalmVariable.Simple(
-        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
-    )  # noqa
-    tshirt = CalmVariable.Simple(
-        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
-    )  # noqa
-    vcpu = CalmVariable.Simple.int(
-        "",
-        label="",
-        regex="^[\\d]*$",
-        validate_regex=False,
-        is_mandatory=False,
-        is_hidden=False,
-        runtime=True,
-        description="",
-    )  # noqa
-    ram = CalmVariable.Simple.int(
-        "",
-        label="",
-        regex="^[\\d]*$",
-        validate_regex=False,
-        is_mandatory=False,
-        is_hidden=False,
-        runtime=True,
-        description="",
-    )  # noqa
-    os = CalmVariable.Simple(
-        "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
-    )  # noqa
-    pc = CalmVariable.WithOptions.FromTask(
+    )  
+    subnet_name = CalmVariable.WithOptions.FromTask(
         CalmVarTask.Exec.escript.py3(
             name="",
             filename=os.path.join(
-                "scripts", "pc_dropdown.py"
+                "scripts", "subnet_dropdown.py"
             ),
         ),
         label="",
         is_mandatory=False,
         is_hidden=False,
         description="",
-    )  # noqa
+    )  
+
+    CalmTask.SetVariable.escript.py3(
+        name="Get PC IP",
+        filename=os.path.join("scripts", "get_pc_ip.py"),
+        variables=["PC_IP"],
+    )
 
     CalmTask.SetVariable.escript.py3(
         name="VM Name",
@@ -202,10 +165,21 @@ def VM_Request(credentials=[BP_CRED_API_CRED]):
                    "cat_uuids_filter_subnet",
                    "cat_uuids_filter_image"],
     )
+    CalmTask.SetVariable.escript.py3(
+        name="Select Cluster and Network",
+        filename=os.path.join("scripts", "select_cluster_subnet_by_categories_escript.py"),
+        variables=["selected_cluster_reference", 
+                   "selected_subnet_reference"],
+    )
+    CalmTask.SetVariable.escript.py3(
+        name="Select Image",
+        filename=os.path.join("scripts", "select_image_by_categories_escript.py"),
+        variables=["selected_image_reference"],
+    )
 
     CalmTask.Exec.escript.py3(
         name="Launch Blueprint",
-        filename=os.path.join("scripts", "launch_blueprint.py"),
+        filename=os.path.join("scripts", "launch_bp_escript.py"),
     )
 
 class RunbookMetadata(Metadata):
