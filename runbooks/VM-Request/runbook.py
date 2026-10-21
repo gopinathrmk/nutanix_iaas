@@ -50,6 +50,13 @@ def VM_Request(credentials=[BP_CRED_API_CRED]):
     NC_FQDN = CalmVariable.Simple(
         env_data["NCM"]["fqdn"], label="", is_mandatory=False, is_hidden=False, runtime=False, description=""
     )  
+    PC_details = CalmVariable.Simple(
+        json.dumps(env_data["PC_details"]), label="", is_mandatory=False, is_hidden=False, runtime=False, description=""
+    )
+    #global_variables = [Ref.GlobalVariable("PC_details")]
+    #global_variables = [Ref.GlobalVariable("NC_FQDN")]
+
+
     selection = CalmVariable.WithOptions(
         ["Automatic", "Manual"],
         label="Selection",
@@ -182,10 +189,20 @@ def VM_Request(credentials=[BP_CRED_API_CRED]):
         description="",
     )  # noqa
 
-    CalmTask.Exec.escript.py3(
-        name="Input Validation",
-        filename=os.path.join("scripts", "input_validation.py"),
+    CalmTask.SetVariable.escript.py3(
+        name="VM Name",
+        filename=os.path.join("scripts", "gen_vm_name.py"),
+        variables=["vm_name"],
     )
+
+    CalmTask.SetVariable.escript.py3(
+        name="Get Category UUID",
+        filename=os.path.join("scripts", "get_category_uuid.py"),
+        variables=["cat_uuids_filter_cluster", 
+                   "cat_uuids_filter_subnet",
+                   "cat_uuids_filter_image"],
+    )
+
     CalmTask.Exec.escript.py3(
         name="Launch Blueprint",
         filename=os.path.join("scripts", "launch_blueprint.py"),

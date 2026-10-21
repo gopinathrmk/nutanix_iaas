@@ -25,6 +25,20 @@ except Exception as e:
     print(f"File Open Failed : {env_file} \n Unexpected error: {e}")
     exit(1)
 
+# Select PC Details
+pc_name = "PC-Trigonometry"
+
+PC_details = env_data["PC_details"]
+PC = None 
+for pc in PC_details:
+    if pc["name"] == pc_name:
+        PC = pc
+        break
+
+if PC is None:
+    print(f"PC with name '{pc_name}' not found in environment data.")
+    exit(1)
+
 BP_CRED_API_CRED = dynamic_cred(
     "@@{username}@@",
     Ref.Account(env_data["NCM"]["cred_provider"]),
@@ -50,9 +64,9 @@ class vmcalm_timeResources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk.Disk.Scsi.cloneFromImageService(env_data["PC1"]["default_image"], bootable=True)
+        AhvVmDisk.Disk.Scsi.cloneFromImageService(PC["default_image"], bootable=True)
     ]
-    nics = [AhvVmNic.NormalNic.ingress(env_data["PC1"]["default_subnet"], cluster=env_data["PC1"]["default_cluster"])]
+    nics = [AhvVmNic.NormalNic.ingress(PC["default_subnet"], cluster=PC["default_cluster"])]
 
     guest_customization = AhvVmGC.CloudInit(
         filename=os.path.join("specs", "vmcalm_time_cloud_init_data.yaml")
@@ -65,7 +79,7 @@ class vmcalm_time(AhvVm):
 
     name = "vm-@@{calm_time}@@"
     resources = vmcalm_timeResources
-    cluster = Ref.Cluster(name=env_data["PC1"]["default_cluster"])
+    cluster = Ref.Cluster(name=PC["default_cluster"])
 
 
 class VM1(Substrate):
