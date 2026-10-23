@@ -1,7 +1,7 @@
 import requests
 requests.packages.urllib3.disable_warnings()
+# import json # comment for escript
 
-#from time import sleep
 # Global configuration
 VERSION = "4.2"
 BACKOFF_FACTOR = 2
@@ -101,18 +101,28 @@ os_name = "@@{os_name}@@"
 win_version = "@@{win_version}@@"
 lin_version = "@@{lin_version}@@"
 
-
+# begin delete for escript
+# Hard coded values for testing
+PC_IP = "pct.blrgso.lab"
+PC_USER = "gs"
+PC_PASSWORD = "Nutanix@123"
+app_type = "jboss"
+env = "prod"
+site = "chn"
+os_name = "centos"
+win_version = "2025"
+lin_version = "8.x"
+# end delete for escript
 
 def main():
     category_filter_cluster = [{env : app_type }]
     category_filter_subnet = [{env : app_type }]
 
     os_category = {os_name : win_version} if os_name == "windows" else {os_name : lin_version}
-    category_filter_image = [{env : app_type}, os_category]
+    category_filter_images = [[{env : app_type}, os_category, {"disk":"1"}],[{env : app_type}, os_category, {"disk":"2"}]]
 
     cat_uuids_filter_cluster = []
     cat_uuids_filter_subnet = []
-    cat_uuids_filter_image = []
 
     init_client(api_server=PC_IP, username=PC_USER, password=PC_PASSWORD)
     for category in category_filter_cluster:
@@ -133,19 +143,23 @@ def main():
             print(f"!!! Fatal: no category for {category_name}={category_value}")
             exit(1)
 
-    for category in category_filter_image:
-        category_name, category_value = next(iter(category.items()))
-        category_data = get_category_by_name(category_name, category_value)
-        if category_data:
-            cat_uuids_filter_image.append(category_data.get("extId"))
-        else:
-            print(f"!!! Fatal: no category for {category_name}={category_value}")
-            exit(1)
+    cat_uuids_filter_images =[]
+    for category_filter_image in category_filter_images:
+        cat_uuids_filter_image = []
+        for category in category_filter_image :
+            category_name, category_value = next(iter(category.items()))
+            category_data = get_category_by_name(category_name, category_value)
+            if category_data:
+                cat_uuids_filter_image.append(category_data.get("extId"))
+            else:
+                print(f"!!! Fatal: no category for {category_name}={category_value}")
+                exit(1)
+        cat_uuids_filter_images.append(cat_uuids_filter_image)
+
 
     print("cat_uuids_filter_cluster=" + json.dumps(cat_uuids_filter_cluster))
     print("cat_uuids_filter_subnet=" + json.dumps(cat_uuids_filter_subnet))
-    print("cat_uuids_filter_image=" + json.dumps(cat_uuids_filter_image))
+    print("cat_uuids_filter_images=" + json.dumps(cat_uuids_filter_images))
 
     
-
 main()

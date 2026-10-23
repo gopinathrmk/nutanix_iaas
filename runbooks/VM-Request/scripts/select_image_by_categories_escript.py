@@ -87,15 +87,17 @@ PC_USER = "@@{API_CRED.username}@@"
 PC_PASSWORD = "@@{API_CRED.secret}@@"
 
 try:
-    cat_uuids_filter_image = json.loads('@@{cat_uuids_filter_image}@@')
+    cat_uuids_filter_images = json.loads('@@{cat_uuids_filter_images}@@')
 except json.decoder.JSONDecodeError:
-    cat_uuids_filter_image = []
+    print("!!! Fatal: invalid JSON format for cat_uuids_filter_image_1 or cat_uuids_filter_image_2")
+    exit(1)
 
 
 def main():
     init_client(api_server=PC_IP, username=PC_USER, password=PC_PASSWORD)
-    filtered_images = []
-    selected_image_reference = None
+    selected_image_reference_list = []
+    filtered_images_0 = []
+    filtered_images_1 = []
 
     # Fetch all images and filter them based on the provided category UUIDs
     images = list_images()
@@ -110,28 +112,35 @@ def main():
         images = list_images(params=params)
         for image in images.get("data", []):
             image_categories = image.get("categoryExtIds", [])
-            if set(cat_uuids_filter_image).issubset(set(image_categories)):
-                filtered_images.append(image)
+            if set(cat_uuids_filter_images[0]).issubset(set(image_categories)):
+                filtered_images_0.append(image)
+            if set(cat_uuids_filter_images[1]).issubset(set(image_categories)):
+                filtered_images_1.append(image)
 
     # print("Filtered Images with categories", cat_uuids_filter_image)
     # for image in filtered_images:
     #     print("\t" + image.get("name"), image.get("extId"))            
 
-    if len(filtered_images) == 1:
-        selected_image_reference = {
-            "kind": "image",
-            "name": filtered_images[0].get("name"),
-            "uuid": filtered_images[0].get("extId")
-        }
-    elif len(filtered_images) > 1:
-        print("\nMultiple images found with the specified categories. Please refine your category filters.")
-        exit(1)
-    else:
-        print("\nNo images found with the specified categories.")
-        exit(1)
+    filtered_images_list=[filtered_images_0, filtered_images_1]
 
-    print("\nSelected Image :", selected_image_reference.get("name"))
+    for filtered_images in filtered_images_list:
+        if len(filtered_images) == 1:
+            selected_image_reference_list.append(
+                {"reference" : {
+                    "kind": "image",
+                    "name": filtered_images[0].get("name"),
+                    "uuid": filtered_images[0].get("extId")
+                    },
+                    "disk_size_mib": round(int(filtered_images[0].get("sizeBytes"))/1024/1024),
+                }
+            )
+        elif len(filtered_images) > 1:
+            print("\nMultiple images found with the specified categories. Please refine your category filters." )
+            exit(1)
+        else:
+            print("\nNo images found with the specified categories.")
+            exit(1)
 
-    print("selected_image_reference=", json.dumps(selected_image_reference))
+    print("selected_image_reference_list=", json.dumps(selected_image_reference_list))
 
 main()

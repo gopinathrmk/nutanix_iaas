@@ -119,7 +119,7 @@ def get_runtime_editables(bp_ext_id):
 # Add json in the app variable list 
 def modify_payload_for_launch(payload, app_name=None, vm_name=None, num_sockets=None, num_vcpus_per_socket=None,
                                memory_size_mib=None, cluster_reference=None, subnet_reference=None, 
-                               image_reference=None, disk_size_mib=None, app_variable=None):
+                               image_reference_list=None, disk_size_mib=None, app_variable=None):
     if app_name:
         payload["spec"]["app_name"] = app_name
 
@@ -142,10 +142,14 @@ def modify_payload_for_launch(payload, app_name=None, vm_name=None, num_sockets=
     if subnet_reference:
         substrate_spec["resources"]["nic_list"]["0"]["subnet_reference"] = subnet_reference
 
-    if image_reference:
-        substrate_spec["resources"]["disk_list"]["0"]["data_source_reference"] = image_reference
-    if disk_size_mib:
-        substrate_spec["resources"]["disk_list"]["0"]["disk_size_mib"] = disk_size_mib
+    # Add code for empty disk as well 
+    if image_reference_list:
+        length = len(image_reference_list)
+        for itr in range(length):
+            if substrate_spec.get("resources",{}).get("disk_list",{}).get(str(itr),{}).get("data_source_reference",{}):
+                substrate_spec["resources"]["disk_list"][str(itr)]["data_source_reference"] = image_reference_list[itr]["reference"]
+            if substrate_spec.get("resources",{}).get("disk_list",{}).get(str(itr),{}).get("disk_size_mib",{}):
+                substrate_spec["resources"]["disk_list"][str(itr)]["disk_size_mib"] = image_reference_list[itr]["disk_size_mib"]
 
     if app_variable:
         variable_list = payload["spec"]["runtime_editables"].get("variable_list",[])
@@ -201,6 +205,7 @@ def simple_launch_blueprint(bp_ext_id, payload):
     response = process_request("POST", endpoint, json=payload, exit_on_error=False)
     launch_response = response.get("data", {}) if response["success"] else {}
     request_id = launch_response.get("status", {}).get("request_id")
+    print(f"Request ID: {request_id}") # Debugging line
 
     if not request_id:
         print("Failed to retrieve request_id from the launch response.")
@@ -212,21 +217,30 @@ def simple_launch_blueprint(bp_ext_id, payload):
     status = launch_status.get("status", {}).get("state")
     app_uuid = launch_status.get("status", {}).get("application_uuid")
     print(f"Launch status: {status}, Application UUID: {app_uuid}")
-    return app_uuid, status
+    return app_uuid, launch_status
 
 # ================= NC Details =================
 NC_API_URL = "ncm.services."+"@@{NC_FQDN}@@"
-NC_USER = "@@{NC_CRED.username}@@"
-NC_PASSWORD = "@@{NC_CRED.secret}@@"
+NC_USER = "@@{API_CRED.username}@@"
+NC_PASSWORD = "@@{API_CRED.secret}@@"
 bp_name = "@@{bp_name}@@"
 vm_name = "@@{vm_name}@@"
+app_type = "@@{app_type}@@"
+os_name = "@@{os_name}@@"
+env = "@@{env}@@"
+site = "@@{site}@@"
+vcpu = int("@@{vcpu}@@")
+memory = int("@@{ram}@@")*1024
+
+app_variable = {"site": site, "env": env, "app_type": app_type}
+
 
 try:
     cluster_reference = json.loads('@@{selected_cluster_reference}@@')
     subnet_reference = json.loads('@@{selected_subnet_reference}@@')
-    image_reference = json.loads('@@{selected_image_reference}@@')
+    image_reference_list = json.loads('@@{selected_image_reference_list}@@')
 except json.decoder.JSONDecodeError:
-    print("!!! Fatal: no cluster or subnet reference")
+    print("!!! Fatal: no cluster or subnet or image reference")
     exit(1)
 
 
@@ -246,23 +260,24 @@ def main():
     init_client(api_server=NC_API_URL, username=NC_USER, password=NC_PASSWORD)
 
     bp_ext_id = get_blueprint_id_by_name(bp_name)
-    print(bp_ext_id)
+    print(f"bp_name: {bp_name}, bp_ext_id: {bp_ext_id}")
 
     runtime_editables_response = get_runtime_editables(bp_ext_id)
     #pprint(runtime_editables_response)
 
     payload_for_launch = gen_payload_for_launch(bp_ext_id, runtime_editables_response, app_name=vm_name)
-    pprint(payload_for_launch)
+    # pprint(payload_for_launch) # Debugging line
 
 
-    modify_payload_for_launch(payload_for_launch,app_name=vm_name, num_sockets=2, num_vcpus_per_socket=2,
-                        memory_size_mib=2048, cluster_reference=cluster_reference, subnet_reference=subnet_reference,
-                        image_reference=image_reference, disk_size_mib=51200)
+    modify_payload_for_launch(payload_for_launch,app_name=vm_name, num_sockets=1, num_vcpus_per_socket=vcpu,
+                        memory_size_mib=memory, cluster_reference=cluster_reference, subnet_reference=subnet_reference,
+                        image_reference_list=image_reference_list, disk_size_mib=51200,app_variable=app_variable)
 
-    print("Modified payload for launch:")
-    pprint(payload_for_launch)
+    # print("Modified payload for launch:") # Debugging line
+    # pprint(payload_for_launch) # Debugging line
 
-    app_uuid, status = simple_launch_blueprint(bp_ext_id, payload_for_launch)
+    app_uuid, launch_status = simple_launch_blueprint(bp_ext_id, payload_for_launch)
+    status = launch_status.get("status", {}).get("state")
 
     if status == "success":
         print(f"Blueprint launched successfully. Application UUID: {app_uuid}")
@@ -271,5 +286,7 @@ def main():
             print(f"Application is running successfully. Application UUID: {app_uuid}")
     else:
         print(f"Blueprint launch failed. Status: {status}")
+        pprint(launch_status)
+        exit(1)
 
 main()

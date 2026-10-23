@@ -44,9 +44,9 @@ BP_CRED_API_CRED = dynamic_cred(
 @runbook
 def VM_Request(credentials=[BP_CRED_API_CRED]):
 
-    bp_name = CalmVariable.Simple(
-        env_data["NCM"]["bp1_name"], label="", is_mandatory=False, is_hidden=False, runtime=False, description=""
-    )  
+    # bp_name = CalmVariable.Simple(
+    #     env_data["NCM"]["bp1_name"], label="", is_mandatory=False, is_hidden=False, runtime=False, description=""
+    # )  
     NC_FQDN = CalmVariable.Simple(
         env_data["NCM"]["fqdn"], label="", is_mandatory=False, is_hidden=False, runtime=False, description=""
     )  
@@ -147,9 +147,9 @@ def VM_Request(credentials=[BP_CRED_API_CRED]):
     )  
 
     CalmTask.SetVariable.escript.py3(
-        name="Get PC IP",
-        filename=os.path.join("scripts", "get_pc_ip.py"),
-        variables=["PC_IP"],
+        name="Get PC_IP and BP_Name",
+        filename=os.path.join("scripts", "get_pc_ip_bp_name.py"),
+        variables=["PC_IP","bp_name"],
     )
 
     CalmTask.SetVariable.escript.py3(
@@ -163,7 +163,8 @@ def VM_Request(credentials=[BP_CRED_API_CRED]):
         filename=os.path.join("scripts", "get_category_uuid.py"),
         variables=["cat_uuids_filter_cluster", 
                    "cat_uuids_filter_subnet",
-                   "cat_uuids_filter_image"],
+                   "cat_uuids_filter_image_1",
+                   "cat_uuids_filter_image_2"],
     )
     CalmTask.SetVariable.escript.py3(
         name="Select Cluster and Network",
