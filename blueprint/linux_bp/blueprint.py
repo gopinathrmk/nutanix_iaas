@@ -65,8 +65,7 @@ class vmcalm_timeResources(AhvVmResources):
     cores_per_vCPU = 1
     disks = [
         AhvVmDisk.Disk.Scsi.cloneFromImageService(PC["default_image"], bootable=True),
-        AhvVmDisk.Disk.Scsi.cloneFromImageService(PC["default_image"]),
-        AhvVmDisk.Disk.Scsi.allocateOnStorageContainer(10240)
+        AhvVmDisk.Disk.Scsi.cloneFromImageService(PC["default_image"])
     ]
     nics = [AhvVmNic.NormalNic.ingress(PC["default_subnet"], cluster=PC["default_cluster"])]
 
@@ -136,7 +135,7 @@ class Default(Profile):
     )
 
 
-class linux_chn(Blueprint):
+class linux_bp(Blueprint):
 
     services = [Service1]
     packages = [Package1]
