@@ -1,0 +1,28 @@
+{
+    "NCM" : {
+        "fqdn" : "nc.blrgso.lab",
+        "project" : "GS",
+        "account1" : "Trigonometry",
+        "cred_provider" : "NCM-Vault",
+        "bp1_name" : "linux_chn"
+    },
+
+    "PC_details" :[ 
+        {
+        "IP" : "10.136.136.8",
+        "name" : "PC-Trigonometry",
+        "site" : "chn",
+        "default_cluster" : "Trigonometry",
+        "default_subnet" : "VLAN-136-IPAM",
+        "default_image" : "AHV_ROCKY_89.qcow2"
+        },
+        {
+        "IP" : "10.136.136.5",
+        "name" : "PC-Vector",
+        "site" : "mum",
+        "default_cluster" : "Vector",
+        "default_subnet" : "VLAN-136-IPAM",
+        "default_image" : "AHV_ROCKY_89.qcow2"
+        }
+    ]
+}
