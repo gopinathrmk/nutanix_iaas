@@ -7,6 +7,9 @@ resources:
     '0':
       data_source_reference: true
       disk_size_mib: true
+    '1':
+      data_source_reference: true
+      disk_size_mib: true
   gpu_list: true
   memory_size_mib: true
   nic_list:

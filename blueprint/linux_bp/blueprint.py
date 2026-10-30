@@ -26,7 +26,7 @@ except Exception as e:
     exit(1)
 
 # Select PC Details
-pc_name = "PC-Trigonometry"
+pc_name = env_data["PC_details"][0]["name"]
 
 PC_details = env_data["PC_details"]
 PC = None 

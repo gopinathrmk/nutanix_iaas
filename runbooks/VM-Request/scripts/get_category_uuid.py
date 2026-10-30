@@ -101,19 +101,6 @@ os_name = "@@{os_name}@@"
 win_version = "@@{win_version}@@"
 lin_version = "@@{lin_version}@@"
 
-# begin delete for escript
-# Hard coded values for testing
-PC_IP = "pct.blrgso.lab"
-PC_USER = "gs"
-PC_PASSWORD = "Nutanix@123"
-app_type = "jboss"
-env = "prod"
-site = "chn"
-os_name = "centos"
-win_version = "2025"
-lin_version = "8.x"
-# end delete for escript
-
 def main():
     category_filter_cluster = [{env : app_type }]
     category_filter_subnet = [{env : app_type }]
