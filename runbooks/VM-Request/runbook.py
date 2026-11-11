@@ -48,10 +48,10 @@ def VM_Request(credentials=[BP_CRED_API_CRED]):
     #     env_data["NCM"]["bp1_name"], label="", is_mandatory=False, is_hidden=False, runtime=False, description=""
     # )  
     NC_FQDN = CalmVariable.Simple(
-        env_data["NCM"]["fqdn"], label="", is_mandatory=False, is_hidden=False, runtime=False, description=""
+        env_data["NCM"]["fqdn"], label="", is_mandatory=False, is_hidden=True, runtime=False, description=""
     )  
     PC_details = CalmVariable.Simple(
-        json.dumps(env_data["PC_details"]), label="", is_mandatory=False, is_hidden=False, runtime=False, description=""
+        json.dumps(env_data["PC_details"]), label="", is_mandatory=False, is_hidden=True, runtime=False, description=""
     )
     #global_variables = [Ref.GlobalVariable("PC_details")]
     #global_variables = [Ref.GlobalVariable("NC_FQDN")]
@@ -103,6 +103,7 @@ def VM_Request(credentials=[BP_CRED_API_CRED]):
         "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
     )  
 
+    """
     # Infra Details
     infra_selection = CalmVariable.Simple(
         "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
@@ -145,7 +146,18 @@ def VM_Request(credentials=[BP_CRED_API_CRED]):
         is_hidden=False,
         description="",
     )  
-
+    """
+    outputs = [
+        CalmVariable.Simple(
+            "",
+            label="",
+            is_mandatory=False,
+            is_hidden=False,
+            runtime=False,
+            description="VM Details",
+            name="vm_details",
+        ),
+    ]
     CalmTask.SetVariable.escript.py3(
         name="Get PC_IP and BP_Name",
         filename=os.path.join("scripts", "get_pc_ip_bp_name.py"),
@@ -181,6 +193,11 @@ def VM_Request(credentials=[BP_CRED_API_CRED]):
     CalmTask.Exec.escript.py3(
         name="Launch Blueprint",
         filename=os.path.join("scripts", "launch_bp_escript.py"),
+    )
+    CalmTask.SetVariable.escript.py3(
+        name="Get VM Details",
+        filename=os.path.join("scripts", "get_vm_details_escript.py"),
+        variables=["vm_details"],
     )
 
 class RunbookMetadata(Metadata):
