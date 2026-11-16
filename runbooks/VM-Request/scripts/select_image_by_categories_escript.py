@@ -114,14 +114,16 @@ def main():
             image_categories = image.get("categoryExtIds", [])
             if set(cat_uuids_filter_images[0]).issubset(set(image_categories)):
                 filtered_images_0.append(image)
-            if set(cat_uuids_filter_images[1]).issubset(set(image_categories)):
-                filtered_images_1.append(image)
+            if len(cat_uuids_filter_images) > 1 and set(cat_uuids_filter_images[1]).issubset(set(image_categories)):
+                filtered_images_1.append(image) #case of single disk image for windows 
 
     # print("Filtered Images with categories", cat_uuids_filter_image)
     # for image in filtered_images:
     #     print("\t" + image.get("name"), image.get("extId"))            
 
-    filtered_images_list=[filtered_images_0, filtered_images_1]
+    filtered_images_list=[filtered_images_0]
+    if len(cat_uuids_filter_images) > 1: # case of single disk image for windows 
+        filtered_images_list.append(filtered_images_1)
 
     for filtered_images in filtered_images_list:
         if len(filtered_images) == 1:

@@ -1,21 +1,25 @@
 import requests
-requests.packages.urllib3.disable_warnings()
 
-#from time import sleep
-# Global configuration
-VERSION = "4.2"
 BACKOFF_FACTOR = 2
+
 DEFAULT_TIMEOUT = 10
+
 RETRIES = 3
+
 SESSION = None
 BASE_URL = None
+# Global configuration
+VERSION = "4.2"
 
-
-def init_client(api_server, username, password, retries=RETRIES, backoff_factor=BACKOFF_FACTOR, default_timeout=DEFAULT_TIMEOUT, version=VERSION):
+def init_client(api_server, username, password,port=9440 ,retries=RETRIES, backoff_factor=BACKOFF_FACTOR, default_timeout=DEFAULT_TIMEOUT, version=VERSION):
     global API_SERVER, BASE_URL, RETRIES, BACKOFF_FACTOR, SESSION, VERSION, DEFAULT_TIMEOUT
 
     API_SERVER = api_server
-    BASE_URL = f"https://{api_server}:9440/api"
+    if port:
+        BASE_URL = f"https://{api_server}:{port}/api"
+    else:
+        BASE_URL = f"https://{api_server}/api"
+    
     RETRIES = retries
     BACKOFF_FACTOR = backoff_factor
     DEFAULT_TIMEOUT = default_timeout
@@ -25,6 +29,7 @@ def init_client(api_server, username, password, retries=RETRIES, backoff_factor=
     SESSION.auth = (username, password)
     SESSION.headers.update({"Content-Type": "application/json"})
     SESSION.verify = False
+
 
 
 def process_request(method, endpoint, exit_on_error=True, full_response=False, **kwargs):
@@ -75,32 +80,34 @@ def process_request(method, endpoint, exit_on_error=True, full_response=False, *
         exit(1)
     return error
 
-
 def list_vms(params=None, exit_on_error=True):
     response = process_request("GET", f"/vmm/v{VERSION}/ahv/config/vms", params=params, exit_on_error=exit_on_error)
     vms = response.get("data", {}) if response["success"] else []
     return vms
 
+def list_apps(payload={"kind": "app"}):
+    endpoint = f"/nutanix/v3/apps/list"
+    response = process_request("POST", endpoint, json=payload, exit_on_error=False)
+    apps = response.get("data", {}) if response["success"] else {}
+    return apps
 
 # ================= PC Details =================
 PC_IP = "@@{PC_IP}@@"
 PC_USER = "@@{API_CRED.username}@@"
 PC_PASSWORD = "@@{API_CRED.secret}@@"
-
+NC_API_URL = "ncm.services."+"@@{NC_FQDN}@@"
+NC_USER = "@@{API_CRED.username}@@"
+NC_PASSWORD = "@@{API_CRED.secret}@@"
 
 app_type = "@@{app_type}@@"
 env = "@@{env}@@"
 site = "@@{site}@@"
+site_enum = {"chn":"in-maa","mum":"in-mum"}
 
 
-def main():
-    
-    vm_name = site + "-" + env + "-" + app_type
-    vm_name = vm_name.lower()
-    # print(vm_name)
 
+def get_suffix_by_vm(vm_name):
     init_client(api_server=PC_IP, username=PC_USER, password=PC_PASSWORD)
-
     params = {
         "$filter" : f"startswith(name,'{vm_name}')"
     }
@@ -131,6 +138,50 @@ def main():
 
     suffix = latest_series + 1
 
+    return suffix
+
+def get_suffix_by_app(app_name):
+    init_client(api_server=NC_API_URL, username=NC_USER, password=NC_PASSWORD,port=None,)
+    apps = list_apps()
+    total_apps_count = apps.get("metadata", {}).get("total_matches", 0)
+    # print(f"Total apps found: {total_apps_count}")
+
+    offset_range = (total_apps_count // 100) + 1 if total_apps_count else 0
+
+    latest_series = 0
+    for offset in range(offset_range):
+        apps = list_apps(payload={"kind": "app", "offset": offset * 100, "length": 100})
+        entities = apps.get("entities", [])
+        
+        for app in entities:
+            existing_app_name = app.get("metadata", {}).get("name")
+            if not existing_app_name.startswith(app_name):
+                continue
+            print("\t", existing_app_name)
+            parts = existing_app_name.rsplit("-", 1)
+            if len(parts) == 2 and parts[1].isdigit():
+                series = int(parts[1])
+                latest_series = max(latest_series, series)
+
+    suffix = latest_series + 1
+
+    return suffix
+
+def main():
+    vm_name = site_enum.get(site, site) + "-" + env + "-" + app_type
+    vm_name = vm_name.lower()
+    # print(vm_name)
+
+    vm_suffix = get_suffix_by_vm(vm_name)
+    print(f"vm_suffix={vm_suffix}")
+
+    app_suffix = get_suffix_by_app(vm_name)
+    print(f"app_suffix={app_suffix}")
+
+    # There can be a case where app is in error and vm is not created. 
+    # Or app is soft deleted and VM is present. 
+    # Hence we need to take the max of the two suffixes.
+    suffix = max(vm_suffix, app_suffix)
     vm_name = vm_name + f"-{suffix:03}"
     
     print(f"vm_name={vm_name}")

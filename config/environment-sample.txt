@@ -14,7 +14,8 @@
         "site" : "chn",
         "default_cluster" : "Trigonometry",
         "default_subnet" : "VLAN-136-IPAM",
-        "default_image" : "AHV_ROCKY_89.qcow2"
+        "default_image_lin" : "AHV_ROCKY_89.qcow2",
+        "default_image_win" : "Windows2019.qcow2"
         },
         {
         "IP" : "10.136.136.5",
@@ -22,7 +23,8 @@
         "site" : "mum",
         "default_cluster" : "Vector",
         "default_subnet" : "VLAN-136-IPAM",
-        "default_image" : "AHV_ROCKY_89.qcow2"
+        "default_image_lin" : "AHV_ROCKY_89.qcow2",
+        "default_image_win" : "Windows2019.qcow2"
         }
     ]
 }

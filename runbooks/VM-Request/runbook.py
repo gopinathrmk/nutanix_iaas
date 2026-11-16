@@ -47,12 +47,6 @@ def VM_Request(credentials=[BP_CRED_API_CRED]):
     # bp_name = CalmVariable.Simple(
     #     env_data["NCM"]["bp1_name"], label="", is_mandatory=False, is_hidden=False, runtime=False, description=""
     # )  
-    NC_FQDN = CalmVariable.Simple(
-        env_data["NCM"]["fqdn"], label="", is_mandatory=False, is_hidden=True, runtime=False, description=""
-    )  
-    PC_details = CalmVariable.Simple(
-        json.dumps(env_data["PC_details"]), label="", is_mandatory=False, is_hidden=True, runtime=False, description=""
-    )
     #global_variables = [Ref.GlobalVariable("PC_details")]
     #global_variables = [Ref.GlobalVariable("NC_FQDN")]
 
@@ -102,6 +96,13 @@ def VM_Request(credentials=[BP_CRED_API_CRED]):
     win_version = CalmVariable.Simple(
         "", label="", is_mandatory=False, is_hidden=False, runtime=True, description=""
     )  
+
+    NC_FQDN = CalmVariable.Simple(
+        env_data["NCM"]["fqdn"], label="", is_mandatory=False, is_hidden=True, runtime=False, description=""
+    )  
+    PC_details = CalmVariable.Simple(
+        json.dumps(env_data["PC_details"]), label="", is_mandatory=False, is_hidden=True, runtime=False, description=""
+    )
 
     """
     # Infra Details
@@ -166,7 +167,7 @@ def VM_Request(credentials=[BP_CRED_API_CRED]):
 
     CalmTask.SetVariable.escript.py3(
         name="VM Name",
-        filename=os.path.join("scripts", "gen_vm_name.py"),
+        filename=os.path.join("scripts", "gen_vm_name_escript.py"),
         variables=["vm_name"],
     )
 

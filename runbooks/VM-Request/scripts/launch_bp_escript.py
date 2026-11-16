@@ -12,12 +12,15 @@ SESSION = None
 # Global configuration
 VERSION = "4.2"
 
-def init_client(api_server, username, password, retries=RETRIES, backoff_factor=BACKOFF_FACTOR, default_timeout=DEFAULT_TIMEOUT, version=VERSION):
+def init_client(api_server, username, password,port=9440 ,retries=RETRIES, backoff_factor=BACKOFF_FACTOR, default_timeout=DEFAULT_TIMEOUT, version=VERSION):
     global API_SERVER, BASE_URL, RETRIES, BACKOFF_FACTOR, SESSION, VERSION, DEFAULT_TIMEOUT
 
     API_SERVER = api_server
-    #BASE_URL = f"https://{api_server}:9440/api"
-    BASE_URL = f"https://{api_server}/api"
+    if port:
+        BASE_URL = f"https://{api_server}:{port}/api"
+    else:
+        BASE_URL = f"https://{api_server}/api"
+    
     RETRIES = retries
     BACKOFF_FACTOR = backoff_factor
     DEFAULT_TIMEOUT = default_timeout
@@ -186,15 +189,15 @@ def monitor_bp_launch_status(bp_ext_id, request_id, max_retries=10):
         response = process_request("GET", endpoint, exit_on_error=False)
         launch_status = response.get("data", {}) if response["success"] else {}
         status = launch_status.get("status", {}).get("state")
-        #pprint(f"Launch status: {status}, Launch details: {launch_status}") # Debugging line
-        print(f"Launch status: {status}")
+        # pprint(f"Launch status: {status}, Launch details: {launch_status}") # Debugging line
+        # print(f"BP Launch status: {status}")
 
         if status not in ["running", "IN_PROGRESS"]:
             print(f"Final launch status: {status}")
             return launch_status
 
         if retry < max_retries:
-            print("Launch is still in progress. Waiting for 10 seconds before checking again...")
+            print(f"BP Launch status is '{status}'. Waiting for 10 seconds before checking again...")
             sleep(10)
 
     print(f"Maximum retries ({max_retries}) reached. Final launch status: {status}")
@@ -205,18 +208,19 @@ def simple_launch_blueprint(bp_ext_id, payload):
     response = process_request("POST", endpoint, json=payload, exit_on_error=False)
     launch_response = response.get("data", {}) if response["success"] else {}
     request_id = launch_response.get("status", {}).get("request_id")
-    print(f"Request ID: {request_id}") # Debugging line
+    print(f"Request ID for blueprint launch: {request_id}") # Debugging line
 
     if not request_id:
         print("Failed to retrieve request_id from the launch response.")
         print(f"Blueprint launch failed.")
         pprint(response)  # Debugging line
-        return None, "failed"
+        exit(1)
+        # return None, "failed" 
 
     launch_status=monitor_bp_launch_status(bp_ext_id,request_id)  # Call to get the launch status
     status = launch_status.get("status", {}).get("state")
     app_uuid = launch_status.get("status", {}).get("application_uuid")
-    print(f"Launch status: {status}, Application UUID: {app_uuid}")
+    # print(f"Launch status: {status}, Application UUID: {app_uuid}") # Debugging line
     return app_uuid, launch_status
 
 # ================= NC Details =================
@@ -257,13 +261,13 @@ except json.decoder.JSONDecodeError:
 
 
 def main():
-    init_client(api_server=NC_API_URL, username=NC_USER, password=NC_PASSWORD)
+    init_client(api_server=NC_API_URL, username=NC_USER, password=NC_PASSWORD,port=None,)
 
     bp_ext_id = get_blueprint_id_by_name(bp_name)
-    print(f"bp_name: {bp_name}, bp_ext_id: {bp_ext_id}")
+    print(f"Blueprint '{bp_name}' with blueprint ID: {bp_ext_id} will be used for provisioning\n")
 
     runtime_editables_response = get_runtime_editables(bp_ext_id)
-    #pprint(runtime_editables_response)
+    # pprint(runtime_editables_response) # Debugging line
 
     payload_for_launch = gen_payload_for_launch(bp_ext_id, runtime_editables_response, app_name=vm_name)
     # pprint(payload_for_launch) # Debugging line
@@ -284,6 +288,10 @@ def main():
         app_status = monitor_app_status(app_uuid)
         if app_status == "running":
             print(f"Application is running successfully. Application UUID: {app_uuid}")
+            print(f"app_uuid={app_uuid}")
+        else:
+            print(f"Application is not running. Application UUID: {app_uuid}")
+            print(f"app_uuid={app_uuid}")
     else:
         print(f"Blueprint launch failed. Status: {status}")
         pprint(launch_status)

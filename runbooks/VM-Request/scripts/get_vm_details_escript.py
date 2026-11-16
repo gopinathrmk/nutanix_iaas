@@ -106,6 +106,7 @@ def main():
         vm_details = {"name": vm_response.get("name"), "ip": ip}
         print(f"vm_details={json.dumps(vm_details)}")
     else:
-        print(f"vm_details=VM '{vm_name}' Not Found")
+        print(f"vm_details=ERROR: VM not created ")
+        exit(1)
 
 main()

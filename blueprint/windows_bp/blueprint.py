@@ -76,8 +76,7 @@ class calm_application_nameResources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk.Disk.Scsi.cloneFromImageService(PC["default_image"], bootable=True),
-        AhvVmDisk.Disk.Scsi.cloneFromImageService(PC["default_image"])
+        AhvVmDisk.Disk.Scsi.cloneFromImageService(PC["default_image_win"], bootable=True),
     ]
     nics = [AhvVmNic.NormalNic.ingress(PC["default_subnet"], cluster=PC["default_cluster"])]
 
@@ -86,7 +85,7 @@ class calm_application_nameResources(AhvVmResources):
     )
 
     power_state = "ON"
-    boot_type = "LEGACY"
+    boot_type = "UEFI"
 
 
 class calm_application_name(AhvVm):

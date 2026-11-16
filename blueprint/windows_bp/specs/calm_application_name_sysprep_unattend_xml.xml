@@ -3,9 +3,9 @@
    <settings pass="specialize">
       <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
          <ComputerName>@@{calm_application_name}@@</ComputerName>
-         <RegisteredOrganization>IAI</RegisteredOrganization>
-         <RegisteredOwner>Acropolis</RegisteredOwner>
-         <TimeZone>Israel Standard Time</TimeZone>
+         <RegisteredOrganization>Intellect Design</RegisteredOrganization>
+         <RegisteredOwner>CORP IT</RegisteredOwner>
+         <TimeZone>Indian Standard Time</TimeZone>
       </component>
      
 	 <component xmlns="" name="Microsoft-Windows-TerminalServices-LocalSessionManager" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" processorArchitecture="amd64">

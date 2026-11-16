@@ -106,7 +106,10 @@ def main():
     category_filter_subnet = [{env : app_type }]
 
     os_category = {os_name : win_version} if os_name == "windows" else {os_name : lin_version}
-    category_filter_images = [[{env : app_type}, os_category, {"disk":"1"}],[{env : app_type}, os_category, {"disk":"2"}]]
+    if os_name != "windows":
+        category_filter_images = [[{env : app_type}, os_category, {"disk":"1"}],[{env : app_type}, os_category, {"disk":"2"}]]
+    else:
+        category_filter_images = [[{env : app_type}, os_category, {"disk":"1"}]] # single disk image for windows 
 
     cat_uuids_filter_cluster = []
     cat_uuids_filter_subnet = []
